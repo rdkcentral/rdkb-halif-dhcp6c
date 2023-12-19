@@ -1,2 +1,1 @@
-# rdkb-halif-dhcp6c
-RDKB DHCP 6 Hardware Abstraction Layer api headers and documentation
+docs/pages/DHCP6ChalSpec.md
