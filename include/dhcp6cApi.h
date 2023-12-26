@@ -30,6 +30,14 @@
  */
 
 
+/*
+ * TODO:
+ *
+ * 1. Extend the return codes by listing out the possible reasons of failure, to improve the interface in the future.
+ *    This was reported during the review for header file migration to opensource github.
+ *
+ */
+
 /**
 * @brief Gets the E-Router Info.
 * @param[out] pInfo - Pointer to dhcp6cInfo_t structure that will hold the complete E-Router information.
@@ -38,11 +46,8 @@
 * @retval STATUS_SUCCESS if successful.
 * @retval STATUS_FAILURE if any error is detected
 *
-* @remark The caller is responsible for providing a valid memory location for the function arguments.
 *
 * 
-* @note This function must not suspend and must not invoke any blocking system
-* calls. It should probably just send a message to a driver event handler task.
 *
 */
 int ert_dhcp6c_get_info(dhcp6cInfo_t *pInfo);
@@ -55,12 +60,9 @@ int ert_dhcp6c_get_info(dhcp6cInfo_t *pInfo);
 * @retval STATUS_SUCCESS if successful.
 * @retval STATUS_FAILURE if any error is detected
 *
-* @remark The caller is responsible for providing a valid memory location for the function arguments.
 *
 * 
 *
-* @note This function must not suspend and must not invoke any blocking system
-* calls. It should probably just send a message to a driver event handler task.
 *
 */
 int ecm_dhcp6c_get_info(dhcp6cInfo_t *pInfo);
