@@ -1,4 +1,4 @@
-/*
+ /**
  * If not stated otherwise in this file or this component's LICENSE file the
  * following copyright and licenses apply:
  *
@@ -15,56 +15,73 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
-/**
-* @file dhcp6cApi.h
-* @brief The dhcp6cApi provides the function call prototypes and structure definitions used for the RDK-Broadband DHCP6Client Status abstraction layer.
-*/
+ */
+ /**
+ * @file dhcp6cApi.h
+ * @brief DHCPv6 Client Hardware Abstraction Layer (HAL)
+ *
+ * This header file defines the interface for the RDK-B DHCP6c HAL, providing a
+ * standardized way to access and manage DHCPv6 client information for E-Router
+ * and ECM components across platforms and vendor implementations. It includes
+ * function prototypes and data structures for retrieving DHCPv6 client details
+ * like offered lease time, remaining lease time, remaining time to renew, and DHCP state.
+ */
 
 #ifndef _DHCP6_CLIENT_API_
 #define _DHCP6_CLIENT_API_
 
 /**
- * @addtogroup DHCPV4C_HAL_APIS
+ * @addtogroup DHCPV6C_HAL_APIS
  * @{
  */
 
-
-/*
- * TODO:
+ /**
+ * @TODO: Refactor Return Codes
+ * This module currently uses basic #define macros for return codes. To improve error handling and provide more informative feedback to users, the following steps are recommended:
+ *   i) Create a Return Code Enum: Define a comprehensive enum to represent the various success and error conditions that functions in this module can encounter. This will enhance type safety and readability.
+ *  ii) Expand Error Codes: Include specific error values within the enum to provide detailed information about the cause of failures. For example, consider adding codes like DHCP6C_HAL_INVALID_ARGUMENT, DHCP6C_HAL_CLIENT_NOT_FOUND, etc.
+ * iii) Update Function Signatures: Modify the return types of functions in this module to use the new enum type.
+ *  iv) Implement Error Handling: Ensure that functions consistently use the new error codes to indicate the outcome of their operations.
  *
- * 1. Extend the return codes by listing out the possible reasons of failure, to improve the interface in the future.
- *    This was reported during the review for header file migration to opensource github.
- *
+ * This refactoring was suggested during the open-source review process to enhance the usability and maintainability of the DHCP6C HAL module.
  */
 
 /**
-* @brief Gets the E-Router Info.
-* @param[out] pInfo - Pointer to dhcp6cInfo_t structure that will hold the complete E-Router information.
-*
-* @return The status of the operation.
-* @retval STATUS_SUCCESS if successful.
-* @retval STATUS_FAILURE if any error is detected
-*
-*
-* 
-*
-*/
+ * @brief Retrieves information about the E-Router (Edge Router) DHCPv6 client.
+ *
+ * This function fetches the current state and configuration details of the 
+ * E-Router DHCPv6 client and stores them in the `dhcp6cInfo_t` structure 
+ * pointed to by `pInfo`.
+ *
+ * @param[out] pInfo - Pointer to a `dhcp6cInfo_t` structure that will be filled 
+ *                     with the E-Router DHCPv6 client information.
+ *
+ * @returns The status of the operation.
+ * @retval STATUS_SUCCESS - The E-Router information was successfully retrieved.
+ * @retval STATUS_FAILURE - An error occurred while retrieving the information.
+ *
+ * @TODO: Refactor return codes to use a more specific and informative enum (see
+ *        general TODO comment).
+ */
 int ert_dhcp6c_get_info(dhcp6cInfo_t *pInfo);
 
 /**
-* @brief Gets the ECM Info.
-* @param[out] pInfo - Pointer to dhcp6cInfo_t structure that will hold the complete ECM information.
-
-* @return The status of the operation.
-* @retval STATUS_SUCCESS if successful.
-* @retval STATUS_FAILURE if any error is detected
-*
-*
-* 
-*
-*
-*/
+ * @brief Retrieves information about the ECM (Embedded Cable Modem) DHCPv6 client.
+ *
+ * This function fetches the current state and configuration details of the ECM 
+ * DHCPv6 client and stores them in the `dhcp6cInfo_t` structure pointed to by 
+ * `pInfo`.
+ *
+ * @param[out] pInfo - Pointer to a `dhcp6cInfo_t` structure that will be filled 
+ *                     with the ECM DHCPv6 client information.
+ *
+ * @returns The status of the operation.
+ * @retval STATUS_SUCCESS - The ECM information was successfully retrieved.
+ * @retval STATUS_FAILURE - An error occurred while retrieving the information.
+ *
+ * @TODO: Refactor return codes to use a more specific and informative enum (see
+ *        general TODO comment).
+ */
 int ecm_dhcp6c_get_info(dhcp6cInfo_t *pInfo);
-/** @} */  //END OF GROUP DHCPV4C_HAL_APIS
+/** @} */  //END OF GROUP DHCPV6C_HAL_APIS
 #endif
