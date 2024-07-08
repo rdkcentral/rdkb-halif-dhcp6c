@@ -8,11 +8,15 @@
 
 ## Description
 
-The diagram below describes a high-level software architecture of the DHCP6C HAL module stack.
+The DHCP6c HAL (Hardware Abstraction Layer) is a software module designed to provide a standardized interface for interacting with DHCPv6 client functionalities on different devices. It acts as a bridge between higher-level software components and the vendor-specific implementation of the DHCPv6 client. The primary goal of the DHCP6c HAL is to abstract the complexities of the underlying DHCPv6 client implementation, allowing applications to access essential information and functionalities without needing to know the specific details of the device's hardware or software. The diagram below describes a high-level software architecture of the DHCP6C HAL module stack.
 
-![DHCP6C HAL Architecture Diag](images/DHCP6C_HAL_Architecture.png)
+```mermaid
 
-DHCP6C HAL is an abstraction layer, implemented to interact with the underlying software through a standard set of APIs to get offered lease time, remaining lease time, remaining time to renew, DHCP State etc.
+flowchart
+    Caller <--> HALIF[HAL Interface - dhcp6cApi.h\n`HAL IF Specifcation / Contract Requirement`]
+    HALIF <--> VendorWrapper[HAL\nVendor Implementation]
+    VendorWrapper <--> VendorDrivers[Vendor Drivers\nImplementation]
+```
 
 ## Component Runtime Execution Requirements
 
@@ -24,20 +28,33 @@ There is no dependent API's is expected to be intialized for invoking DHCP6C HAL
 
 ## Threading Model
 
-The interface is not thread safe.
+Vendors may implement internal threading and event mechanisms to meet their operational requirements. These mechanisms must be designed to ensure thread safety when interacting with HAL interface. Proper cleanup of allocated resources (e.g., memory, file handles, threads) is mandatory when the vendor software terminates or closes its connection to the HAL.
 
-Any module which is invoking the API should ensure calls are made in a thread safe manner.
+This interface is not inherently required to be thread-safe. It is the responsibility of the calling module or component to ensure that all interactions with the APIs are properly synchronized.
 
-Vendors can create internal threads/events to meet their operation requirements. These should be responsible to synchronize between the calls, events and cleaned up on closure.
+**Implementation Guidance for Vendors:**
+
+Vendors are free to use internal threading or event mechanisms within their implementation as needed to fulfill operational requirements. However, any such mechanisms must:
+
+- **Synchronize Access:** Implement appropriate synchronization primitives (e.g., mutexes, semaphores) to prevent race conditions and ensure data integrity when accessing the APIs.
+- **Resource Management:** Ensure proper cleanup and release of any resources (e.g., memory, threads) allocated during the lifetime of the instance, especially during module shutdown or disconnection.
 
 ## Process Model
 
-All API's are expected to be called from multiple process.
+All APIs are expected to be called from multiple processes. Due to this concurrent access, vendors must implement protection mechanisms within their API implementations to handle multiple processes calling the same API simultaneously. This is crucial to ensure data integrity, prevent race conditions, and maintain the overall stability and reliability of the system.
 
 ## Memory Model
 
-The client module is responsible to allocate and deallocate memory for necessary API's as specified in API Documentation.
-Different 3rd party vendors allowed to allocate memory for internal operational requirements. In this case 3rd party implementations should be responsible to de-allocate internally.
+**Caller Responsibilities:**
+
+Manage memory passed to specific functions as outlined in the API documentation. This includes allocation and deallocation to prevent leaks.
+
+**Module Responsibilities:**
+
+- Modules must allocate and de-allocate memory for their internal operations, ensuring efficient resource management.
+- Modules are required to release all internally allocated memory upon closure to prevent resource leaks.
+- All module implementations and caller code must strictly adhere to these memory management requirements for optimal performance and system stability. Unless otherwise stated specifically in the API documentation.
+- All strings used in this module must be zero-terminated. This ensures that string functions can accurately determine the length of the string and prevents buffer overflows when manipulating strings.
 
 TODO:
 State a footprint requirement. Example: This should not exceed XXXX KB.
@@ -45,7 +62,6 @@ State a footprint requirement. Example: This should not exceed XXXX KB.
 ## Power Management Requirements
 
 The HAL is not involved in any of the power management operation.
-Any power management state transitions MUST not affect the operation of the HAL.
 
 ## Asynchronous Notification Model
 
@@ -53,21 +69,26 @@ There are no asynchronous notifications.
 
 ## Blocking calls
 
-The API's are expected to work synchronously and should complete within a time period commensurate with the complexity of the operation and in accordance with any relevant specification.
-Any calls that can fail due to the lack of a response should have a timeout period in accordance with any API documentation.
-The upper layers will call this API from a single thread context, this API should not suspend.
+**Synchronous and Responsive:** All APIs within this module should operate synchronously and complete within a reasonable timeframe based on the complexity of the operation. Specific timeout values or guidelines may be documented for individual API calls.
+
+**Timeout Handling:** To ensure resilience in cases of unresponsiveness, implement appropriate timeouts for API calls where failure due to lack of response is a possibility. Refer to the API documentation for recommended timeout values per function.
+
+**Non-Blocking Requirement:** Given the single-threaded environment in which these APIs will be called, it is imperative that they do not block or suspend execution of the main thread. Implementations must avoid long-running operations or utilize asynchronous mechanisms where necessary to maintain responsiveness.
 
 TODO:
 As we state that they should complete within a time period, we need to state what that time target is, and pull it from the spec if required. Define the timeout requirement.
 
 ## Internal Error Handling
 
-All the DHCP6C HAL API's should return error synchronously as a return argument. HAL is responsible to handle system errors(e.g. out of memory) internally.
+**Synchronous Error Handling:** All APIs must return errors synchronously as a return value. This ensures immediate notification of errors to the caller.
+
+**Internal Error Reporting:** The HAL is responsible for reporting any internal system errors (e.g., out-of-memory conditions) through the return value.
+
+**Focus on Logging for Errors:** For system errors, the HAL should prioritize logging the error details for further investigation and resolution.
 
 ## Persistence Model
 
 There is no requirement for HAL to persist any setting information. The caller is responsible to persist any settings related to their implementation.
-
 
 ## Nonfunctional requirements
 
@@ -75,25 +96,33 @@ Following non functional requirement should be supported by the component.
 
 ## Logging and debugging requirements
 
-The component should log all the error and critical informative messages, preferably using syslog, printf which helps to debug/triage the issues and understand the functional flow of the system.
+The component is required to record all errors and critical informative messages to aid in identifying, debugging, and understanding the functional flow of the system. Logging should be implemented using the syslog method, as it provides robust logging capabilities suited for system-level software. The use of `printf` is discouraged unless `syslog` is not available.
 
-The logging should be consistent across all HAL components.
+All HAL components must adhere to a consistent logging process. When logging is necessary, it should be performed into the `dhcp6c_vendor_hal.log` file, which is located in either the `/var/tmp/` or `/rdklogs/logs/` directories.
 
-If the vendor is going to log then it has to be logged in `xxx_vendor_hal.log` file name which can be placed in `/rdklogs/logs/` or `/var/tmp/` directory.
+Logs must be categorized according to the following log levels, as defined by the Linux standard logging system, listed here in descending order of severity:
 
-Logging should be defined with log levels as per Linux standard logging.
+- **FATAL:** Critical conditions, typically indicating system crashes or severe failures that require immediate attention.
+- **ERROR:** Non-fatal error conditions that nonetheless significantly impede normal operation.
+- **WARNING:** Potentially harmful situations that do not yet represent errors.
+- **NOTICE:** Important but not error-level events.
+- **INFO:** General informational messages that highlight system operations.
+- **DEBUG:** Detailed information typically useful only when diagnosing problems.
+- **TRACE:** Very fine-grained logging to trace the internal flow of the system.
+
+Each log entry should include a timestamp, the log level, and a message describing the event or condition. This standard format will facilitate easier parsing and analysis of log files across different vendors and components.
 
 ## Memory and performance requirements
 
-The component should not contributing more to memory and CPU utilization while performing normal operations and commensurate with the operation required.
+**Client Module Responsibility:** The client module using the HAL is responsible for allocating and deallocating memory for any data structures required by the HAL's APIs. This includes structures passed as parameters to HAL functions and any buffers used to receive data from the HAL.
 
+**Vendor Implementation Responsibility:** Third-party vendors, when implementing the HAL, may allocate memory internally for their specific operational needs. It is the vendor's sole responsibility to manage and deallocate this internally allocated memory.
 
 ## Quality Control
 
-DHCP6C HAL implementation should pass checks using any third party tools like `Coverity`, `Black duck`, `Valgrind` etc. without any issue to ensure quality.
+To ensure the highest quality and reliability, it is strongly recommended that third-party quality assurance tools like `Coverity`, `Black Duck`, and `Valgrind` be employed to thoroughly analyze the implementation. The goal is to detect and resolve potential issues such as memory leaks, memory corruption, or other defects before deployment.
 
-There should not be any memory leaks/corruption introduced by HAL and underneath 3rd party software implementation.
-
+Furthermore, both the HAL wrapper and any third-party software interacting with it must prioritize robust memory management practices. This includes meticulous allocation, deallocation, and error handling to guarantee a stable and leak-free operation.
 
 ## Licensing
 
@@ -101,13 +130,13 @@ DHCP6C HAL implementation is expected to released under the Apache License 2.0.
 
 ## Build Requirements
 
-The source code should be able to be built under Linux Yocto environment and should be delivered as a shared library named as `libdhcp6cApi.so.0`
+The source code should be capable of, but not be limited to, building under the Yocto distribution environment. The recipe should deliver a shared library named as `libdhcp6cApi.so`
 
 ## Variability Management
 
-Changes to the interface will be controlled by versioning, vendors will be expected to implement to a fixed version of the interface, and based on SLA agreements move to later versions as demand requires.
+The role of adjusting the interface, guided by versioning, rests solely within architecture requirements. Thereafter, vendors are obliged to align their implementation with a designated version of the interface. As per Service Level Agreement (SLA) terms, they may transition to newer versions based on demand needs.
 
-Each API interface will be versioned using [Semantic Versioning 2.0.0](https://semver.org/), the vendor code will comply with a specific version of the interface.
+Each API interface will be versioned using Semantic Versioning 2.0.0, the vendor code will comply with a specific version of the interface.
 
 ## DHCP6C or Product Customization
 
@@ -118,11 +147,29 @@ None
 All HAL function prototypes and datatype definitions are available in `dhcp6cApi.h` file.
 
 1. Components/Process must include `dhcp6cApi.h` to make use of DHCP6C hal capabilities.
-2. Components/Process should add linker dependency for `libdhcp6cApi.so.0`
+2. Components/Process should add linker dependency for `libdhcp6cApi.so`
 
 ## Theory of operation and key concepts
 
-Covered as per "Description" sections in the API documentation.
+DHCP6C HAL Object Lifecycles, Method Sequencing, and State-Dependent Behaviour
+
+**Object Lifecycles:**
+
+- **No Explicit Object Creation:** The DHCP6C HAL interface, as presented, does not involve explicit creation or destruction of objects within the HAL itself. The primary "object" in this context is the DHCPv6 client configuration and state information, which is maintained by the underlying vendor implementation.
+
+- **Data Retrieval:** The HAL APIs (`ert_dhcp6c_get_info` and `ecm_dhcp6c_get_info`) are designed to retrieve existing DHCPv6 client information from the vendor implementation and populate a `dhcp6cInfo_t` structure provided by the caller. The lifecycle of this structure is managed by the calling module.
+
+**Method Sequencing:**
+
+- **No Strict Sequencing:** There is no explicit requirement for a specific order in which the methods must be called. However, it is implied that the initialization and configuration of the DHCPv6 client within the vendor implementation would happen before the HAL APIs are used to retrieve information.
+
+- **Initialization Responsibility:** The responsibility for initializing and configuring the DHCPv6 client lies with the vendor implementation and potentially with higher-level components that manage the network configuration.
+
+**State-Dependent Behaviour:**
+
+- **Implicit State Dependency:** While not explicitly stated, the behaviour of the HAL APIs is inherently state-dependent. The information returned by the `ert_dhcp6c_get_info` and `ecm_dhcp6c_get_info` functions will depend on the current state of the DHCPv6 client within the vendor implementation.
+
+- **Potential Blocking:** The documentation mentions that the interface may block if the underlying hardware is not ready, suggesting that the API calls could have different behaviours based on the underlying system's state.
 
 ## Sequence Diagram
 
@@ -142,4 +189,3 @@ DHCP6C HAL->>Vendor Software:
 Vendor Software->>DHCP6C HAL: 
 DHCP6C HAL->>Client Module: return
 ```
-
