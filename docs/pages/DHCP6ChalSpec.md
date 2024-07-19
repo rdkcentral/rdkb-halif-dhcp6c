@@ -155,7 +155,7 @@ DHCP6C HAL Object Lifecycles, Method Sequencing, and State-Dependent Behaviour
 
 **Object Lifecycles:**
 
-- **No Explicit Object Creation:** The DHCP6C HAL interface, as presented, does not involve explicit creation or destruction of objects within the HAL itself. The primary "object" in this context is the DHCPv6 client configuration and state information, which is maintained by the underlying vendor implementation.
+- **No Explicit Object Creation:** The DHCP6C HAL interface does not involve explicit creation or destruction of objects within the HAL itself. The primary "object" in this context is the DHCPv6 client configuration and state information, which is maintained by the underlying vendor implementation.
 
 - **Data Retrieval:** The HAL APIs (`ert_dhcp6c_get_info` and `ecm_dhcp6c_get_info`) are designed to retrieve existing DHCPv6 client information from the vendor implementation and populate a `dhcp6cInfo_t` structure provided by the caller. The lifecycle of this structure is managed by the calling module.
 
@@ -169,7 +169,7 @@ DHCP6C HAL Object Lifecycles, Method Sequencing, and State-Dependent Behaviour
 
 - **Implicit State Dependency:** While not explicitly stated, the behaviour of the HAL APIs is inherently state-dependent. The information returned by the `ert_dhcp6c_get_info` and `ecm_dhcp6c_get_info` functions will depend on the current state of the DHCPv6 client within the vendor implementation.
 
-- **Potential Blocking:** The documentation mentions that the interface may block if the underlying hardware is not ready, suggesting that the API calls could have different behaviours based on the underlying system's state.
+- **Potential Blocking:** The interface may block if the underlying hardware is not ready, the API calls can have different behaviours based on the underlying system's state.
 
 ## Sequence Diagram
 
