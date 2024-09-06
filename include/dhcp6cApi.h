@@ -30,26 +30,26 @@
 #ifndef _DHCP6_CLIENT_API_
 #define _DHCP6_CLIENT_API_
 
-#define IPV6_ADDR_SIZE 16                  // Size of an IPv6 address in bytes
-#define MAX_IPV6_ADDR_LIST_SIZE 3          // Maximum number of DNS addresses in the list
+#define IPV6_ADDR_SIZE 16           /**!< Size of an IPv6 address in bytes */
+#define MAX_IPV6_ADDR_LIST_SIZE 3   /**!< Maximum number of DNS addresses in the list */
 
 typedef struct {
-    char ifname[32];                       // Network interface name
-    int smState;                           // State machine state
-    int configAttemps;                     // Number of configuration attempts
-    unsigned char ipAddr[IPV6_ADDR_SIZE];  // IPv6 address assigned to the interface
-    unsigned char prefix[IPV6_ADDR_SIZE];  // Network prefix for the assigned IPv6 address
-    unsigned char gw[IPV6_ADDR_SIZE];      // IPv6 address of the gateway
-    unsigned char dhcpServer[IPV6_ADDR_SIZE]; // IPv6 address of the DHCP server
-    unsigned int t1;                       // Renewal time (T1) for the lease
-    unsigned int t2;                       // Rebinding time (T2) for the lease
-    unsigned int leaseTime;                // Total lease time for the IP address
-    unsigned int leaseGotTime;             // Timestamp when the lease was obtained
-    unsigned int remainLeaseTime;          // Remaining lease time for the IP address
-    unsigned int remainRenewTime;          // Remaining time to renewal (T1)
-    unsigned int remainRebindTime;         // Remaining time to rebind (T2)
-    int numOfDns;                          // Number of DNS addresses in the list
-    unsigned char dnsAddrList[MAX_IPV6_ADDR_LIST_SIZE][IPV6_ADDR_SIZE]; // List of DNS server IPv6 addresses
+    char ifname[32];                /**!< Network interface name */
+    int smState;                    /**!< State machine state */
+    int configAttemps;              /**!< Number of configuration attempts */
+    unsigned char ipAddr[IPV6_ADDR_SIZE];     /**!< IPv6 address assigned to the interface */
+    unsigned char prefix[IPV6_ADDR_SIZE];     /**!< Network prefix for the assigned IPv6 address */
+    unsigned char gw[IPV6_ADDR_SIZE];         /**!< IPv6 address of the gateway */
+    unsigned char dhcpServer[IPV6_ADDR_SIZE]; /**!< IPv6 address of the DHCP server */
+    unsigned int t1;                 /**!< Renewal time (T1) for the lease */
+    unsigned int t2;                 /**!< Rebinding time (T2) for the lease */
+    unsigned int leaseTime;          /**!< Total lease time for the IP address */
+    unsigned int leaseGotTime;       /**!< Timestamp when the lease was obtained */
+    unsigned int remainLeaseTime;    /**!< Remaining lease time for the IP address */
+    unsigned int remainRenewTime;    /**!< Remaining time to renewal (T1) */
+    unsigned int remainRebindTime;   /**!< Remaining time to rebind (T2) */
+    int numOfDns;                   /**!< Number of DNS addresses in the list */
+    unsigned char dnsAddrList[MAX_IPV6_ADDR_LIST_SIZE][IPV6_ADDR_SIZE]; /**!< List of DNS server IPv6 addresses */
 } dhcp6cInfo_t;
 
 /**
